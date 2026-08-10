@@ -44,10 +44,10 @@
     <!-- Header / Navbar -->
     <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <!-- App Title -->
+            <!-- App Title & Status Badge -->
             <div class="flex items-center gap-3 select-none">
-                <span class="font-black text-2xl tracking-tight text-white">漫画読録</span>
-                <!-- Cloud Sync Status Badge -->
+                <span class="font-black text-xl sm:text-2xl tracking-tight text-white">漫画読録</span>
+                <!-- Cloud/Local Sync Status Badge (変更保存時のみ表示) -->
                 <span id="syncStatusBadge" class="hidden text-[11px] font-semibold px-2.5 py-1 rounded-full transition duration-300">
                 </span>
             </div>
@@ -56,32 +56,31 @@
             <div class="flex items-center gap-2 sm:gap-3">
                 <!-- Google Login / User Profile -->
                 <div id="googleAuthContainer" class="flex items-center">
-                    <button onclick="handleGoogleLogin()" id="googleLoginBtn" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold transition flex items-center gap-2 border border-slate-700/60 shadow-sm">
+                    <button onclick="handleGoogleLogin()" id="googleLoginBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold transition flex items-center gap-1.5 border border-slate-700/60 shadow-sm">
                         <i class="fa-brands fa-google text-red-400"></i>
-                        <span>Googleログイン</span>
+                        <span>ログイン</span>
                     </button>
-                    <div id="googleUserProfile" class="hidden flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5">
+                    <div id="googleUserProfile" class="hidden flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 rounded-xl px-2.5 py-1.5">
                         <img id="googleUserAvatar" src="" alt="Avatar" class="w-5 h-5 rounded-full object-cover">
-                        <span id="googleUserName" onclick="openUsernameModal()" title="ユーザー名を変更" class="text-xs font-semibold text-slate-200 max-w-[120px] truncate cursor-pointer hover:text-indigo-300 transition"></span>
-                        <button onclick="openUsernameModal()" title="ユーザー名を変更" class="text-slate-400 hover:text-indigo-400 text-xs ml-0.5 transition">
+                        <span id="googleUserName" onclick="openUsernameModal()" title="ユーザー名を変更" class="text-xs font-semibold text-slate-200 max-w-[100px] sm:max-w-[140px] truncate cursor-pointer hover:text-indigo-300 transition"></span>
+                        <button onclick="openUsernameModal()" title="ユーザー名を変更" class="text-slate-400 hover:text-indigo-400 text-xs transition">
                             <i class="fa-solid fa-pen text-[10px]"></i>
                         </button>
-                        <button onclick="handleGoogleLogout()" title="ログアウト" class="text-slate-400 hover:text-rose-400 text-xs ml-1.5 transition flex items-center gap-1 font-medium">
+                        <button onclick="handleGoogleLogout()" title="ログアウト" class="text-slate-400 hover:text-rose-400 text-xs ml-1 transition flex items-center gap-1 font-medium">
                             <i class="fa-solid fa-right-from-bracket"></i>
-                            <span class="hidden sm:inline">ログアウト</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- AI Recommendation Modal Trigger Button -->
-                <button onclick="openAiRecommendModal()" class="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-brand-600 hover:from-purple-500 hover:to-brand-500 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98]">
-                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300 animate-pulse"></i>
-                    <span class="hidden xs:inline">AIおすすめ診断</span>
+                <button onclick="openAiRecommendModal()" class="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-brand-600 hover:from-purple-500 hover:to-brand-500 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98]">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+                    <span class="hidden xs:inline">AI診断</span>
                 </button>
 
-                <button onclick="openAddModal()" class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-brand-600/30 hover:scale-[1.02] active:scale-[0.98]">
+                <button onclick="openAddModal()" class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-lg shadow-brand-600/30 hover:scale-[1.02] active:scale-[0.98]">
                     <i class="fa-solid fa-plus"></i>
-                    <span class="hidden sm:inline">作品を追加</span>
+                    <span class="hidden sm:inline">作品追加</span>
                 </button>
             </div>
         </div>
@@ -144,8 +143,8 @@
                 <i class="fa-solid fa-book"></i>
             </div>
             <div>
-                <h3 class="text-lg font-bold text-slate-300">条件に合う作品が見つかりません</h3>
-                <p class="text-sm text-slate-500 mt-1">検索ワードを変更するか、新しい漫画を登録してください。</p>
+                <h3 class="text-lg font-bold text-slate-300">作品がありません</h3>
+                <p class="text-sm text-slate-500 mt-1">新しい漫画を追加するか、Googleログインして作品を同期してください。</p>
             </div>
             <button onclick="openAddModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl transition shadow-lg shadow-brand-600/20 inline-flex items-center gap-2">
                 <i class="fa-solid fa-plus"></i> 新しい作品を追加する
@@ -375,8 +374,10 @@
         window.mangas = [];
         window.currentFilterStatus = 'all';
         window.customUserName = localStorage.getItem('mangalog_custom_user_name') || '';
+        window.selectedAiPref = 'favorites';
 
-        // ローカルデータの読み込み
+        // --- 関数の標準宣言 (ホイスティングで呼び出しエラーを完全に防止) ---
+
         function loadLocalData() {
             try {
                 const stored = localStorage.getItem('mangalog_data');
@@ -391,7 +392,6 @@
             }
         }
 
-        // ローカルストレージ保存
         function saveLocalData() {
             try {
                 localStorage.setItem('mangalog_data', JSON.stringify(window.mangas));
@@ -406,25 +406,16 @@
             if (!badge) return;
             if (badgeTimeout) clearTimeout(badgeTimeout);
 
-            if (status === 'synced') {
+            if (status === 'saved') {
                 badge.classList.remove('hidden');
                 badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition duration-300";
-                badge.textContent = "☁️ クラウド同期済み";
-            } else if (status === 'syncing') {
-                badge.classList.remove('hidden');
-                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 transition duration-300";
-                badge.textContent = "🔄 同期中...";
-            } else if (status === 'error') {
-                badge.classList.remove('hidden');
-                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 transition duration-300";
-                badge.textContent = "⚠️ 同期エラー";
-            } else if (status === 'saved') {
+                badge.textContent = "💾 保存完了";
+                badgeTimeout = setTimeout(() => { badge.classList.add('hidden'); }, 2500);
+            } else if (status === 'synced') {
                 badge.classList.remove('hidden');
                 badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 transition duration-300";
-                badge.textContent = "💾 保存完了";
-                badgeTimeout = setTimeout(() => {
-                    badge.classList.add('hidden');
-                }, 2500);
+                badge.textContent = "☁️ クラウド同期済み";
+                badgeTimeout = setTimeout(() => { badge.classList.add('hidden'); }, 2500);
             } else {
                 badge.classList.add('hidden');
             }
@@ -447,8 +438,7 @@
                                 unsubscribeSync = null;
                             }
                             loadLocalData();
-                            updateSyncBadge('local');
-                            window.renderApp();
+                            renderApp();
                         }
                     });
                 }
@@ -476,7 +466,7 @@
             }
         }
 
-        window.handleGoogleLogin = async function() {
+        async function handleGoogleLogin() {
             if (!auth) return;
             try {
                 const provider = new GoogleAuthProvider();
@@ -486,9 +476,9 @@
                 console.error("Google Auth error:", err);
                 showToast("ログインに失敗しました: " + (err.message || ''));
             }
-        };
+        }
 
-        window.handleGoogleLogout = async function() {
+        async function handleGoogleLogout() {
             if (!auth) return;
             try {
                 if (unsubscribeSync) {
@@ -497,50 +487,16 @@
                 }
                 await signOut(auth);
                 loadLocalData();
-                updateSyncBadge('local');
-                window.renderApp();
+                renderApp();
                 showToast("ログアウトしました");
             } catch (err) {
                 console.error("Logout error:", err);
             }
-        };
-
-        window.openUsernameModal = function() {
-            const current = window.customUserName || (auth?.currentUser?.displayName) || '';
-            document.getElementById('customUsernameInput').value = current;
-            const modal = document.getElementById('usernameModal');
-            const content = document.getElementById('usernameModalContent');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
-                content.classList.add('scale-100');
-            }, 10);
-        };
-
-        window.closeUsernameModal = function() {
-            const modal = document.getElementById('usernameModal');
-            const content = document.getElementById('usernameModalContent');
-            modal.classList.add('opacity-0');
-            content.classList.remove('scale-100');
-            content.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 200);
-        };
-
-        window.saveCustomUsername = function() {
-            const newName = document.getElementById('customUsernameInput').value.trim();
-            window.customUserName = newName;
-            localStorage.setItem('mangalog_custom_user_name', newName);
-            updateAuthUI(auth?.currentUser);
-            closeUsernameModal();
-            showToast("ユーザー名を変更しました！");
-        };
+        }
 
         function setupRealtimeSync(user) {
             if (!db || !user || user.isAnonymous) return;
             if (unsubscribeSync) unsubscribeSync();
-
-            updateSyncBadge('syncing');
 
             const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library');
 
@@ -549,7 +505,6 @@
                     const data = snapshot.data();
                     if (data && Array.isArray(data.mangas)) {
                         const cloudMap = new Map(data.mangas.map(m => [m.id, m]));
-                        
                         window.mangas.forEach(localManga => {
                             if (!cloudMap.has(localManga.id)) {
                                 cloudMap.set(localManga.id, localManga);
@@ -558,20 +513,19 @@
 
                         window.mangas = Array.from(cloudMap.values());
                         saveLocalData();
-                        window.renderApp();
+                        renderApp();
                         updateSyncBadge('synced');
                     }
                 } else {
-                    window.saveData();
+                    saveData();
                     updateSyncBadge('synced');
                 }
             }, (error) => {
                 console.warn("Firestore sync error:", error);
-                updateSyncBadge('error');
             });
         }
 
-        window.saveData = async function() {
+        async function saveData() {
             saveLocalData();
 
             const user = auth?.currentUser;
@@ -581,7 +535,6 @@
             }
 
             try {
-                updateSyncBadge('syncing');
                 const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library');
                 await setDoc(docRef, {
                     mangas: window.mangas,
@@ -590,15 +543,14 @@
                 updateSyncBadge('synced');
             } catch (e) {
                 console.error("Cloud save failed:", e);
-                updateSyncBadge('error');
             }
-        };
+        }
 
-        window.renderApp = function() {
+        function renderApp() {
             const mangaGrid = document.getElementById('mangaGrid');
             const emptyState = document.getElementById('emptyState');
-            const searchVal = document.getElementById('searchInput').value.trim().toLowerCase();
-            const sortVal = document.getElementById('sortSelect').value;
+            const searchVal = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+            const sortVal = document.getElementById('sortSelect')?.value || 'updated-desc';
 
             let filtered = window.mangas.filter(item => {
                 const matchStatus = window.currentFilterStatus === 'all' || item.status === window.currentFilterStatus;
@@ -614,14 +566,15 @@
                 return 0;
             });
 
+            if (!mangaGrid) return;
             mangaGrid.innerHTML = '';
             if (filtered.length === 0) {
-                emptyState.classList.remove('hidden');
+                emptyState?.classList.remove('hidden');
             } else {
-                emptyState.classList.add('hidden');
+                emptyState?.classList.add('hidden');
                 filtered.forEach(manga => mangaGrid.appendChild(createMangaCard(manga)));
             }
-        };
+        }
 
         function createMangaCard(manga) {
             const card = document.createElement('div');
@@ -682,19 +635,19 @@
             return card;
         }
 
-        window.quickIncrementChap = function(id, event) {
+        function quickIncrementChap(id, event) {
             if (event) event.stopPropagation();
             const index = window.mangas.findIndex(m => m.id === id);
             if (index !== -1) {
                 window.mangas[index].readChap = (window.mangas[index].readChap || 0) + 1;
                 window.mangas[index].updatedAt = new Date().toISOString();
-                window.saveData();
-                window.renderApp();
+                saveData();
+                renderApp();
                 showToast(`「${window.mangas[index].title}」 を第${window.mangas[index].readChap}話に進めました`);
             }
-        };
+        }
 
-        window.openAddModal = function() {
+        function openAddModal() {
             document.getElementById('mangaId').value = '';
             document.getElementById('mangaForm').reset();
             removeCoverImage();
@@ -708,13 +661,13 @@
                 content.classList.remove('scale-95');
                 content.classList.add('scale-100');
             }, 10);
-        };
+        }
 
-        window.openEditModal = function(id) {
+        function openEditModal(id) {
             const manga = window.mangas.find(m => m.id === id);
             if (!manga) return;
 
-            window.closeDetailModal();
+            closeDetailModal();
 
             document.getElementById('mangaId').value = manga.id;
             document.getElementById('formTitle').value = manga.title;
@@ -739,9 +692,9 @@
                 content.classList.remove('scale-95');
                 content.classList.add('scale-100');
             }, 10);
-        };
+        }
 
-        window.handleCoverFileUpload = function(event) {
+        function handleCoverFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -769,9 +722,9 @@
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
-        };
+        }
 
-        window.previewCoverImage = function(url) {
+        function previewCoverImage(url) {
             const container = document.getElementById('coverPreviewContainer');
             const img = document.getElementById('coverPreviewImg');
             if (url && url.trim().length > 0) {
@@ -780,24 +733,24 @@
             } else {
                 container.classList.add('hidden');
             }
-        };
+        }
 
-        window.removeCoverImage = function() {
+        function removeCoverImage() {
             document.getElementById('formCoverUrl').value = '';
             document.getElementById('formCoverFile').value = '';
             document.getElementById('coverPreviewContainer').classList.add('hidden');
-        };
+        }
 
-        window.closeModal = function() {
+        function closeModal() {
             const modal = document.getElementById('mangaModal');
             const content = document.getElementById('mangaModalContent');
             modal.classList.add('opacity-0');
             content.classList.remove('scale-100');
             content.classList.add('scale-95');
             setTimeout(() => { modal.classList.add('hidden'); }, 200);
-        };
+        }
 
-        window.handleFormSubmit = function(event) {
+        function handleFormSubmit(event) {
             event.preventDefault();
             const id = document.getElementById('mangaId').value;
             const title = document.getElementById('formTitle').value.trim();
@@ -827,13 +780,13 @@
                 window.mangas.unshift(newManga);
             }
 
-            window.saveData();
-            window.closeModal();
-            window.renderApp();
+            saveData();
+            closeModal();
+            renderApp();
             showToast("作品情報を保存しました");
-        };
+        }
 
-        window.openDetailModal = function(id) {
+        function openDetailModal(id) {
             const manga = window.mangas.find(m => m.id === id);
             if (!manga) return;
 
@@ -916,28 +869,28 @@
                 content.classList.remove('scale-95');
                 content.classList.add('scale-100');
             }, 10);
-        };
+        }
 
-        window.closeDetailModal = function() {
+        function closeDetailModal() {
             const modal = document.getElementById('detailModal');
             const content = document.getElementById('detailModalContent');
             modal.classList.add('opacity-0');
             content.classList.remove('scale-100');
             content.classList.add('scale-95');
             setTimeout(() => { modal.classList.add('hidden'); }, 200);
-        };
+        }
 
-        window.deleteManga = function(id) {
+        function deleteManga(id) {
             const item = window.mangas.find(m => m.id === id);
             if (!item) return;
             window.mangas = window.mangas.filter(m => m.id !== id);
-            window.saveData();
-            window.closeDetailModal();
-            window.renderApp();
+            saveData();
+            closeDetailModal();
+            renderApp();
             showToast(`「${item.title}」 を削除しました`);
-        };
+        }
 
-        window.setFilterStatus = function(status) {
+        function setFilterStatus(status) {
             window.currentFilterStatus = status;
             document.querySelectorAll('.status-tab').forEach(tab => {
                 tab.classList.remove('bg-brand-600', 'text-white', 'active');
@@ -948,12 +901,41 @@
                 activeTab.classList.add('bg-brand-600', 'text-white', 'active');
                 activeTab.classList.remove('text-slate-400', 'hover:text-slate-200');
             }
-            window.renderApp();
-        };
+            renderApp();
+        }
 
-        window.selectedAiPref = 'favorites';
+        function openUsernameModal() {
+            const current = window.customUserName || (auth?.currentUser?.displayName) || '';
+            document.getElementById('customUsernameInput').value = current;
+            const modal = document.getElementById('usernameModal');
+            const content = document.getElementById('usernameModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
 
-        window.openAiRecommendModal = function() {
+        function closeUsernameModal() {
+            const modal = document.getElementById('usernameModal');
+            const content = document.getElementById('usernameModalContent');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 200);
+        }
+
+        function saveCustomUsername() {
+            const newName = document.getElementById('customUsernameInput').value.trim();
+            window.customUserName = newName;
+            localStorage.setItem('mangalog_custom_user_name', newName);
+            updateAuthUI(auth?.currentUser);
+            closeUsernameModal();
+            showToast("ユーザー名を変更しました！");
+        }
+
+        function openAiRecommendModal() {
             const modal = document.getElementById('aiRecommendModal');
             const content = document.getElementById('aiRecommendModalContent');
             modal.classList.remove('hidden');
@@ -962,18 +944,18 @@
                 content.classList.remove('scale-95');
                 content.classList.add('scale-100');
             }, 10);
-        };
+        }
 
-        window.closeAiRecommendModal = function() {
+        function closeAiRecommendModal() {
             const modal = document.getElementById('aiRecommendModal');
             const content = document.getElementById('aiRecommendModalContent');
             modal.classList.add('opacity-0');
             content.classList.remove('scale-100');
             content.classList.add('scale-95');
             setTimeout(() => { modal.classList.add('hidden'); }, 200);
-        };
+        }
 
-        window.setAiPref = function(pref) {
+        function setAiPref(pref) {
             window.selectedAiPref = pref;
             document.querySelectorAll('.ai-pref-btn').forEach(btn => {
                 btn.className = "ai-pref-btn px-3 py-2 rounded-xl text-xs font-semibold bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200 transition text-center";
@@ -982,9 +964,9 @@
             if (active) {
                 active.className = "ai-pref-btn px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white border border-indigo-500 transition text-center";
             }
-        };
+        }
 
-        window.generateAiRecommendations = async function() {
+        async function generateAiRecommendations() {
             const btn = document.getElementById('generateAiRecBtn');
             const resultsContainer = document.getElementById('aiRecResults');
 
@@ -1065,9 +1047,9 @@
                 btn.disabled = false;
                 btn.innerHTML = originalBtnHtml;
             }
-        };
+        }
 
-        window.addRecommendedManga = function(title, author) {
+        function addRecommendedManga(title, author) {
             const newManga = {
                 id: Date.now().toString(),
                 title: title,
@@ -1082,12 +1064,12 @@
             };
 
             window.mangas.unshift(newManga);
-            window.saveData();
-            window.renderApp();
+            saveData();
+            renderApp();
             showToast(`「${title}」を「積読・読みたい」に追加しました！`);
-        };
+        }
 
-        window.showToast = function(msg) {
+        function showToast(msg) {
             const container = document.getElementById('toastContainer');
             if (!container) return;
 
@@ -1102,12 +1084,38 @@
                 toast.classList.add('opacity-0', '-translate-y-2');
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
-        };
+        }
+
+        // --- 全ての関数をグローバル（window）に割り当て ---
+        window.handleGoogleLogin = handleGoogleLogin;
+        window.handleGoogleLogout = handleGoogleLogout;
+        window.openAddModal = openAddModal;
+        window.openEditModal = openEditModal;
+        window.closeModal = closeModal;
+        window.handleFormSubmit = handleFormSubmit;
+        window.openDetailModal = openDetailModal;
+        window.closeDetailModal = closeDetailModal;
+        window.deleteManga = deleteManga;
+        window.quickIncrementChap = quickIncrementChap;
+        window.handleCoverFileUpload = handleCoverFileUpload;
+        window.previewCoverImage = previewCoverImage;
+        window.removeCoverImage = removeCoverImage;
+        window.setFilterStatus = setFilterStatus;
+        window.openUsernameModal = openUsernameModal;
+        window.closeUsernameModal = closeUsernameModal;
+        window.saveCustomUsername = saveCustomUsername;
+        window.openAiRecommendModal = openAiRecommendModal;
+        window.closeAiRecommendModal = closeAiRecommendModal;
+        window.setAiPref = setAiPref;
+        window.generateAiRecommendations = generateAiRecommendations;
+        window.addRecommendedManga = addRecommendedManga;
+        window.renderApp = renderApp;
+        window.saveData = saveData;
 
         window.addEventListener('DOMContentLoaded', () => {
             loadLocalData();
             initFirebaseSync();
-            window.renderApp();
+            renderApp();
         });
     </script>
 </body>
