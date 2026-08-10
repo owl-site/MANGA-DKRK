@@ -44,20 +44,18 @@
     <!-- Header / Navbar -->
     <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <!-- App Title & Status Badge -->
+            <!-- App Title & Cloud Sync Status Badge -->
             <div class="flex items-center gap-3 select-none">
                 <span class="font-black text-xl sm:text-2xl tracking-tight text-white">漫画読録</span>
-                <!-- Cloud/Local Sync Status Badge (変更保存時のみ表示) -->
                 <span id="syncStatusBadge" class="hidden text-[11px] font-semibold px-2.5 py-1 rounded-full transition duration-300">
                 </span>
             </div>
 
             <!-- Action buttons -->
             <div class="flex items-center gap-2 sm:gap-3">
-                <!-- Google Login / User Profile -->
+                <!-- Google Login / User Profile (Googleアイコン除去) -->
                 <div id="googleAuthContainer" class="flex items-center">
-                    <button onclick="handleGoogleLogin()" id="googleLoginBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold transition flex items-center gap-1.5 border border-slate-700/60 shadow-sm">
-                        <i class="fa-brands fa-google text-red-400"></i>
+                    <button onclick="handleGoogleLogin()" id="googleLoginBtn" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold transition flex items-center gap-1.5 border border-slate-700/60 shadow-sm">
                         <span>ログイン</span>
                     </button>
                     <div id="googleUserProfile" class="hidden flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 rounded-xl px-2.5 py-1.5">
@@ -144,7 +142,7 @@
             </div>
             <div>
                 <h3 class="text-lg font-bold text-slate-300">作品がありません</h3>
-                <p class="text-sm text-slate-500 mt-1">新しい漫画を追加するか、Googleログインして作品を同期してください。</p>
+                <p class="text-sm text-slate-500 mt-1">新しい漫画を追加するか、ログインして同期してください。</p>
             </div>
             <button onclick="openAddModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl transition shadow-lg shadow-brand-600/20 inline-flex items-center gap-2">
                 <i class="fa-solid fa-plus"></i> 新しい作品を追加する
@@ -333,7 +331,6 @@
             measurementId: "G-N170G255GN"
         };
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'manga-log-app';
         let db = null;
         let auth = null;
         let unsubscribeSync = null;
@@ -376,16 +373,10 @@
         window.customUserName = localStorage.getItem('mangalog_custom_user_name') || '';
         window.selectedAiPref = 'favorites';
 
-        // --- 関数の標準宣言 (ホイスティングで呼び出しエラーを完全に防止) ---
-
         function loadLocalData() {
             try {
                 const stored = localStorage.getItem('mangalog_data');
-                if (stored) {
-                    window.mangas = JSON.parse(stored);
-                } else {
-                    window.mangas = [];
-                }
+                window.mangas = stored ? JSON.parse(stored) : [];
             } catch (e) {
                 console.warn("Local storage error:", e);
                 window.mangas = [];
@@ -406,15 +397,23 @@
             if (!badge) return;
             if (badgeTimeout) clearTimeout(badgeTimeout);
 
-            if (status === 'saved') {
+            if (status === 'syncing') {
                 badge.classList.remove('hidden');
-                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition duration-300";
-                badge.textContent = "💾 保存完了";
-                badgeTimeout = setTimeout(() => { badge.classList.add('hidden'); }, 2500);
+                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 transition duration-300";
+                badge.textContent = "🔄 同期中...";
             } else if (status === 'synced') {
                 badge.classList.remove('hidden');
-                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 transition duration-300";
+                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition duration-300";
                 badge.textContent = "☁️ クラウド同期済み";
+                badgeTimeout = setTimeout(() => { badge.classList.add('hidden'); }, 3000);
+            } else if (status === 'error') {
+                badge.classList.remove('hidden');
+                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 transition duration-300";
+                badge.textContent = "⚠️ 同期エラー";
+            } else if (status === 'saved') {
+                badge.classList.remove('hidden');
+                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 transition duration-300";
+                badge.textContent = "💾 ローカル保存";
                 badgeTimeout = setTimeout(() => { badge.classList.add('hidden'); }, 2500);
             } else {
                 badge.classList.add('hidden');
@@ -498,30 +497,42 @@
             if (!db || !user || user.isAnonymous) return;
             if (unsubscribeSync) unsubscribeSync();
 
-            const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library');
+            updateSyncBadge('syncing');
 
-            unsubscribeSync = onSnapshot(docRef, (snapshot) => {
+            // ユーザーごとの直接ドキュメントパス
+            const userDocRef = doc(db, 'users', user.uid);
+
+            unsubscribeSync = onSnapshot(userDocRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.data();
                     if (data && Array.isArray(data.mangas)) {
-                        const cloudMap = new Map(data.mangas.map(m => [m.id, m]));
-                        window.mangas.forEach(localManga => {
-                            if (!cloudMap.has(localManga.id)) {
-                                cloudMap.set(localManga.id, localManga);
+                        const localMap = new Map(window.mangas.map(m => [m.id, m]));
+                        
+                        // クラウドのデータを統合（更新日時が新しい方を優先）
+                        data.mangas.forEach(cm => {
+                            const lm = localMap.get(cm.id);
+                            if (!lm || new Date(cm.updatedAt) > new Date(lm.updatedAt)) {
+                                localMap.set(cm.id, cm);
                             }
                         });
 
-                        window.mangas = Array.from(cloudMap.values());
+                        window.mangas = Array.from(localMap.values());
                         saveLocalData();
                         renderApp();
                         updateSyncBadge('synced');
                     }
                 } else {
-                    saveData();
-                    updateSyncBadge('synced');
+                    // クラウドにデータがまだ無い場合は現在のデータを送信
+                    if (window.mangas.length > 0) {
+                        saveData();
+                    } else {
+                        updateSyncBadge('synced');
+                    }
                 }
             }, (error) => {
-                console.warn("Firestore sync error:", error);
+                console.error("Firestore sync error:", error);
+                updateSyncBadge('error');
+                showToast("⚠️ 同期エラー: FirebaseのFirestoreルール設定を確認してください");
             });
         }
 
@@ -535,14 +546,17 @@
             }
 
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library');
-                await setDoc(docRef, {
+                updateSyncBadge('syncing');
+                const userDocRef = doc(db, 'users', user.uid);
+                await setDoc(userDocRef, {
                     mangas: window.mangas,
                     updatedAt: new Date().toISOString()
                 });
                 updateSyncBadge('synced');
             } catch (e) {
                 console.error("Cloud save failed:", e);
+                updateSyncBadge('error');
+                showToast("⚠️ クラウド保存に失敗しました: Firebaseアクセス権限エラー");
             }
         }
 
@@ -1086,7 +1100,7 @@
             }, 3000);
         }
 
-        // --- 全ての関数をグローバル（window）に割り当て ---
+        // 全ての関数をグローバル（window）に登録
         window.handleGoogleLogin = handleGoogleLogin;
         window.handleGoogleLogout = handleGoogleLogout;
         window.openAddModal = openAddModal;
