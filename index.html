@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>漫画読書記録・管理 - MangaLog</title>
+    <title>漫画読録</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -44,18 +47,15 @@
     <!-- Header / Navbar -->
     <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <!-- App Logo / Title -->
+            <!-- App Logo & Title -->
             <div class="flex items-center gap-3 select-none">
-                <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700/90 flex items-center justify-center text-indigo-400 shrink-0">
-                    <i class="fa-solid fa-book-open text-base"></i>
-                </div>
-                <div class="flex flex-col">
-                    <span class="font-black text-xl tracking-tight text-white">漫画読録</span>
-                    <span class="text-[10px] font-semibold text-slate-400 tracking-wider -mt-1 hidden xs:block">MANGA TRACKER</span>
-                </div>
+                <span class="font-black text-2xl tracking-tight text-white">漫画読録</span>
+                <!-- Cloud Sync Status Badge -->
+                <span id="syncStatusBadge" class="hidden text-[11px] font-semibold px-2.5 py-1 rounded-full transition duration-300">
+                </span>
             </div>
 
-            <!-- Action buttons & Sync Badge -->
+            <!-- Action buttons -->
             <div class="flex items-center gap-2 sm:gap-3">
                 <!-- Google Login / User Profile -->
                 <div id="googleAuthContainer" class="flex items-center">
@@ -415,6 +415,57 @@
         window.mangas = [];
         window.currentFilterStatus = 'all';
 
+        // 即座にローカルデータを復元（ページ更新で絶対消さないためのバックアップ）
+        function loadLocalData() {
+            try {
+                const stored = localStorage.getItem('mangalog_data');
+                if (stored) {
+                    window.mangas = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.warn("Local storage error:", e);
+            }
+        }
+
+        // ローカルストレージへの即時二重保存
+        function saveLocalData() {
+            try {
+                localStorage.setItem('mangalog_data', JSON.stringify(window.mangas));
+            } catch (e) {
+                console.warn("Local save error:", e);
+            }
+        }
+
+        let badgeTimeout = null;
+        function updateSyncBadge(status) {
+            const badge = document.getElementById('syncStatusBadge');
+            if (!badge) return;
+            if (badgeTimeout) clearTimeout(badgeTimeout);
+
+            if (status === 'synced') {
+                badge.classList.remove('hidden');
+                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition duration-300";
+                badge.textContent = "☁️ クラウド同期済み";
+            } else if (status === 'syncing') {
+                badge.classList.remove('hidden');
+                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 transition duration-300";
+                badge.textContent = "🔄 同期中...";
+            } else if (status === 'error') {
+                badge.classList.remove('hidden');
+                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 transition duration-300";
+                badge.textContent = "⚠️ 同期エラー";
+            } else if (status === 'saved') {
+                badge.classList.remove('hidden');
+                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 transition duration-300";
+                badge.textContent = "💾 保存完了";
+                badgeTimeout = setTimeout(() => {
+                    badge.classList.add('hidden');
+                }, 2500);
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
         async function initFirebaseSync() {
             try {
                 if (HARDCODED_FIREBASE_CONFIG && HARDCODED_FIREBASE_CONFIG.apiKey) {
@@ -425,15 +476,13 @@
                     onAuthStateChanged(auth, (user) => {
                         updateAuthUI(user);
                         if (user && !user.isAnonymous) {
-                            // ログイン時：Firestoreからアカウント専用データを監視・取得
                             setupRealtimeSync(user);
                         } else {
-                            // ログアウト時：データ監視を解約して画面作品を消去
                             if (unsubscribeSync) {
                                 unsubscribeSync();
                                 unsubscribeSync = null;
                             }
-                            window.mangas = [];
+                            updateSyncBadge('local');
                             window.renderApp();
                         }
                     });
@@ -531,43 +580,83 @@
             if (!db || !user || user.isAnonymous) return;
             if (unsubscribeSync) unsubscribeSync();
 
-            // ログインユーザー専用パス: /artifacts/{appId}/users/{userId}/mangas/library
+            updateSyncBadge('syncing');
+
+            // ログインユーザー専用データパス
             const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library');
 
             unsubscribeSync = onSnapshot(docRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.data();
                     if (data && Array.isArray(data.mangas)) {
-                        window.mangas = data.mangas;
+                        // クラウドとローカルのデータをID基準でマージして欠損防止
+                        const cloudMap = new Map(data.mangas.map(m => [m.id, m]));
+                        
+                        // ローカルにあってクラウドにないものを補填
+                        window.mangas.forEach(localManga => {
+                            if (!cloudMap.has(localManga.id)) {
+                                cloudMap.set(localManga.id, localManga);
+                            }
+                        });
+
+                        window.mangas = Array.from(cloudMap.values());
+                        saveLocalData();
                         window.renderApp();
+                        updateSyncBadge('synced');
                     }
                 } else {
-                    // 初回ログイン時は空配列で初期化保存
-                    window.mangas = [];
+                    // 初回ログイン時：ローカルのデータをクラウドへ自動移行
                     window.saveData();
-                    window.renderApp();
+                    updateSyncBadge('synced');
                 }
             }, (error) => {
                 console.warn("Firestore sync error:", error);
+                updateSyncBadge('error');
+                showToast("クラウド同期エラー: Firebaseのルール設定を確認してください");
             });
         }
 
         window.saveData = async function() {
+            // 常に即時ローカル保存
+            saveLocalData();
+
             const user = auth?.currentUser;
             if (!user || user.isAnonymous) {
-                showToast("作品を保存するにはGoogleログインしてください");
+                updateSyncBadge('saved');
                 return;
             }
 
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library');
+                updateSyncBadge('syncing');
+                const docRef = doc(doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library'));
                 await setDoc(docRef, {
                     mangas: window.mangas,
                     updatedAt: new Date().toISOString()
                 });
+                updateSyncBadge('synced');
             } catch (e) {
                 console.error("Cloud save failed:", e);
-                showToast("保存に失敗しました");
+                updateSyncBadge('error');
+                showToast("クラウド保存に失敗しました");
+            }
+        };
+
+        window.renderApp = function() {
+
+            const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library');
+        window.handleGoogleLogout = async function() {
+            if (!auth) return;
+            try {
+                if (unsubscribeSync) {
+                    unsubscribeSync();
+                    unsubscribeSync = null;
+                }
+                await signOut(auth);
+                updateSyncBadge('local');
+                window.renderApp();
+                showToast("ログアウトしました");
+            } catch (err) {
+                console.error("Logout error:", err);
             }
         };
 
@@ -1082,6 +1171,7 @@
         };
 
         window.addEventListener('DOMContentLoaded', () => {
+            loadLocalData(); // 起動時に即時ロード
             initFirebaseSync();
             window.renderApp();
         });
