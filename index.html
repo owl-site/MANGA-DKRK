@@ -6,9 +6,6 @@
     <title>漫画読録</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -47,7 +44,7 @@
     <!-- Header / Navbar -->
     <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <!-- App Logo & Title -->
+            <!-- App Title -->
             <div class="flex items-center gap-3 select-none">
                 <span class="font-black text-2xl tracking-tight text-white">漫画読録</span>
                 <!-- Cloud Sync Status Badge -->
@@ -156,43 +153,6 @@
         </div>
 
     </main>
-
-    <!-- Modal: Firebase Settings / Google Login Setup -->
-    <div id="firebaseModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform scale-95 transition-transform duration-200" id="firebaseModalContent">
-            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-                <h3 class="text-base font-bold text-white flex items-center gap-2">
-                    <i class="fa-brands fa-google text-red-400"></i> Googleログイン / クラウド同期設定
-                </h3>
-                <button onclick="closeFirebaseConfigModal()" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <div class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-                <p class="text-xs text-slate-300 leading-relaxed">
-                    Firebase Consoleで表示される `const firebaseConfig = { ... };` のコードをそのまま貼り付けて保存してください。自動で解析して保存します。
-                </p>
-
-                <div class="space-y-2">
-                    <label class="block text-xs font-semibold text-slate-200">Firebase Config（コードのまま貼り付けOK）</label>
-                    <textarea id="firebaseConfigInput" rows="6" placeholder='const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "your-app.firebaseapp.com",
-  projectId: "your-app",
-  storageBucket: "your-app.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef"
-};' class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-indigo-300 placeholder-slate-600 focus:outline-none focus:border-brand-500"></textarea>
-                </div>
-
-                <div class="flex justify-end gap-3 pt-2">
-                    <button onclick="closeFirebaseConfigModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition">キャンセル</button>
-                    <button onclick="saveFirebaseConfigFromInput()" class="px-5 py-2 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-600/30 transition">保存して接続</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal: Add / Edit Manga -->
     <div id="mangaModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
@@ -357,7 +317,7 @@
         </div>
     </div>
 
-    <!-- Firebase Cloud Sync & Main Application Script -->
+    <!-- Main Application Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -414,20 +374,24 @@
 
         window.mangas = [];
         window.currentFilterStatus = 'all';
+        window.customUserName = localStorage.getItem('mangalog_custom_user_name') || '';
 
-        // 即座にローカルデータを復元（ページ更新で絶対消さないためのバックアップ）
+        // ローカルデータの読み込み
         function loadLocalData() {
             try {
                 const stored = localStorage.getItem('mangalog_data');
                 if (stored) {
                     window.mangas = JSON.parse(stored);
+                } else {
+                    window.mangas = [];
                 }
             } catch (e) {
                 console.warn("Local storage error:", e);
+                window.mangas = [];
             }
         }
 
-        // ローカルストレージへの即時二重保存
+        // ローカルストレージ保存
         function saveLocalData() {
             try {
                 localStorage.setItem('mangalog_data', JSON.stringify(window.mangas));
@@ -482,6 +446,7 @@
                                 unsubscribeSync();
                                 unsubscribeSync = null;
                             }
+                            loadLocalData();
                             updateSyncBadge('local');
                             window.renderApp();
                         }
@@ -491,8 +456,6 @@
                 console.warn("Firebase Auth Init Error:", err);
             }
         }
-
-        window.customUserName = localStorage.getItem('mangalog_custom_user_name') || '';
 
         function updateAuthUI(user) {
             const loginBtn = document.getElementById('googleLoginBtn');
@@ -521,11 +484,7 @@
                 showToast("Googleアカウントでログインしました");
             } catch (err) {
                 console.error("Google Auth error:", err);
-                if (err.code === 'auth/unauthorized-domain') {
-                    alert("Firebase Consoleの「Authentication」>「設定」>「承認済みドメイン」に、ご自身の GitHub ページのドメイン (" + window.location.hostname + ") を追加してください。");
-                } else {
-                    showToast("ログインに失敗しました: " + (err.message || ''));
-                }
+                showToast("ログインに失敗しました: " + (err.message || ''));
             }
         };
 
@@ -537,9 +496,10 @@
                     unsubscribeSync = null;
                 }
                 await signOut(auth);
-                window.mangas = [];
+                loadLocalData();
+                updateSyncBadge('local');
                 window.renderApp();
-                showToast("ログアウトしました（作品を非表示にしました）");
+                showToast("ログアウトしました");
             } catch (err) {
                 console.error("Logout error:", err);
             }
@@ -582,17 +542,14 @@
 
             updateSyncBadge('syncing');
 
-            // ログインユーザー専用データパス
             const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library');
 
             unsubscribeSync = onSnapshot(docRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.data();
                     if (data && Array.isArray(data.mangas)) {
-                        // クラウドとローカルのデータをID基準でマージして欠損防止
                         const cloudMap = new Map(data.mangas.map(m => [m.id, m]));
                         
-                        // ローカルにあってクラウドにないものを補填
                         window.mangas.forEach(localManga => {
                             if (!cloudMap.has(localManga.id)) {
                                 cloudMap.set(localManga.id, localManga);
@@ -605,19 +562,16 @@
                         updateSyncBadge('synced');
                     }
                 } else {
-                    // 初回ログイン時：ローカルのデータをクラウドへ自動移行
                     window.saveData();
                     updateSyncBadge('synced');
                 }
             }, (error) => {
                 console.warn("Firestore sync error:", error);
                 updateSyncBadge('error');
-                showToast("クラウド同期エラー: Firebaseのルール設定を確認してください");
             });
         }
 
         window.saveData = async function() {
-            // 常に即時ローカル保存
             saveLocalData();
 
             const user = auth?.currentUser;
@@ -628,7 +582,7 @@
 
             try {
                 updateSyncBadge('syncing');
-                const docRef = doc(doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library'));
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library');
                 await setDoc(docRef, {
                     mangas: window.mangas,
                     updatedAt: new Date().toISOString()
@@ -637,26 +591,6 @@
             } catch (e) {
                 console.error("Cloud save failed:", e);
                 updateSyncBadge('error');
-                showToast("クラウド保存に失敗しました");
-            }
-        };
-
-        window.renderApp = function() {
-
-            const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'mangas', 'library');
-        window.handleGoogleLogout = async function() {
-            if (!auth) return;
-            try {
-                if (unsubscribeSync) {
-                    unsubscribeSync();
-                    unsubscribeSync = null;
-                }
-                await signOut(auth);
-                updateSyncBadge('local');
-                window.renderApp();
-                showToast("ログアウトしました");
-            } catch (err) {
-                console.error("Logout error:", err);
             }
         };
 
@@ -1171,7 +1105,7 @@
         };
 
         window.addEventListener('DOMContentLoaded', () => {
-            loadLocalData(); // 起動時に即時ロード
+            loadLocalData();
             initFirebaseSync();
             window.renderApp();
         });
