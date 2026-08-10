@@ -53,7 +53,7 @@
 
             <!-- Action buttons -->
             <div class="flex items-center gap-2 sm:gap-3">
-                <!-- Google Login / User Profile (Googleアイコン除去) -->
+                <!-- Google Login / User Profile -->
                 <div id="googleAuthContainer" class="flex items-center">
                     <button onclick="handleGoogleLogin()" id="googleLoginBtn" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold transition flex items-center gap-1.5 border border-slate-700/60 shadow-sm">
                         <span>ログイン</span>
@@ -71,7 +71,7 @@
                 </div>
 
                 <!-- AI Recommendation Modal Trigger Button -->
-
+                <button onclick="openAiRecommendModal()" class="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-brand-600 hover:from-purple-500 hover:to-brand-500 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98]">
                     <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
                     <span class="hidden xs:inline">AI診断</span>
                 </button>
@@ -318,7 +318,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
         // Firebase 設定
         const HARDCODED_FIREBASE_CONFIG = {
@@ -333,8 +333,7 @@
 
         let db = null;
         let auth = null;
-        let unsubscribeSync = null;
-        let isMergingOfflineData = true;
+        let activeUnsubscribe = null;
 
         // Gemini API Configuration
         const GEMINI_MODEL = "gemini-3-flash-preview";
@@ -371,7 +370,6 @@
 
         window.mangas = [];
         window.currentFilterStatus = 'all';
-        window.customUserName = localStorage.getItem('mangalog_custom_user_name') || '';
         window.selectedAiPref = 'favorites';
 
         function loadLocalData() {
@@ -426,17 +424,16 @@
                 if (HARDCODED_FIREBASE_CONFIG && HARDCODED_FIREBASE_CONFIG.apiKey) {
                     const app = initializeApp(HARDCODED_FIREBASE_CONFIG);
                     auth = getAuth(app);
-                    db = getFirestore(app);
+                    db = getDatabase(app);
 
                     onAuthStateChanged(auth, (user) => {
                         updateAuthUI(user);
-                        isMergingOfflineData = true;
                         if (user && !user.isAnonymous) {
                             setupRealtimeSync(user);
                         } else {
-                            if (unsubscribeSync) {
-                                unsubscribeSync();
-                                unsubscribeSync = null;
+                            if (activeUnsubscribe) {
+                                activeUnsubscribe();
+                                activeUnsubscribe = null;
                             }
                             loadLocalData();
                             renderApp();
@@ -454,135 +451,9 @@
             const avatar = document.getElementById('googleUserAvatar');
             const nameElem = document.getElementById('googleUserName');
 
-            const displayName = window.customUserName || (user && !user.isAnonymous ? user.displayName : '') || 'ユーザー';
-
-            if (user && !user.isAnonymous) {
-                if (loginBtn) loginBtn.classList.add('hidden');
-                if (profileDiv) profileDiv.classList.remove('hidden');
-                if (avatar) avatar.src = user.photoURL || 'https://placehold.co/40x40/334155/fff?text=U';
-                if (nameElem) nameElem.textContent = displayName;
-            } else {
-                if (loginBtn) loginBtn.classList.remove('hidden');
-                if (profileDiv) profileDiv.classList.add('hidden');
-            }
-        }
-
-        async function handleGoogleLogin() {
-            if (!auth) return;
-            try {
-                const provider = new GoogleAuthProvider();
-                await signInWithPopup(auth, provider);
-                showToast("Googleアカウントでログインしました");
-            } catch (err) {
-                console.error("Google Auth error:", err);
-                if (err.code === 'auth/unauthorized-domain') {
-                    showToast("⚠️ FirebaseでGitHub Pagesのドメインが許可されていません");
-                } else if (err.code === 'auth/popup-blocked') {
-                    showToast("⚠️ ポップアップがブロックされました。ブラウザ設定を確認してください");
-                } else {
-                    showToast("ログインに失敗しました: " + (err.message || ''));
-                }
-            }
-        }
-
-        async function handleGoogleLogout() {
-            if (!auth) return;
-            try {
-                if (unsubscribeSync) {
-                    unsubscribeSync();
-                    unsubscribeSync = null;
-                }
-                await signOut(auth);
-                loadLocalData();
-                renderApp();
-                showToast("ログアウトしました");
-            } catch (err) {
-                console.error("Logout error:", err);
-            }
-        }
-
-        function setupRealtimeSync(user) {
-            if (!db || !user || user.isAnonymous) return;
-            if (unsubscribeSync) unsubscribeSync();
-
-            updateSyncBadge('syncing');
-
-            // ユーザーごとの直接ドキュメントパス
-            const userDocRef = doc(db, 'users', user.uid);
-
-            unsubscribeSync = onSnapshot(userDocRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.data();
-                    const cloudMangas = Array.isArray(data.mangas) ? data.mangas : [];
-
-                    if (isMergingOfflineData) {
-                        // 初回ログイン時：ローカルにあった未ログイン時のデータをクラウドと合体
-                        const cloudIds = new Set(cloudMangas.map(m => m.id));
-                        const offlineItems = window.mangas.filter(m => !cloudIds.has(m.id));
-
-                        if (offlineItems.length > 0) {
-                            window.mangas = [...cloudMangas, ...offlineItems];
-                            saveData(); // クラウドへ書き込み
-                        } else {
-                            window.mangas = cloudMangas;
-                        }
-                        isMergingOfflineData = false;
-                    } else {
-                        // 2回目以降の自動同期：クラウドのデータをそのまま完全反映（削除・追加が他デバイスに即時連動）
-                        window.mangas = cloudMangas;
-                    }
-
-                    saveLocalData();
-                    renderApp();
-                    updateSyncBadge('synced');
-                } else {
-                    // クラウドにデータがまだ存在しない場合（初回）
-                    saveData();
-                    isMergingOfflineData = false;
-                    updateSyncBadge('synced');
-                }
-            }, (error) => {
-                console.error("Firestore sync error:", error);
-                updateSyncBadge('error');
-                if (error.code === 'permission-denied') {
-                    showToast("⚠️ Firestoreのアクセス権限エラー: コンソールの「ルール」を確認してください");
-                } else {
-                    showToast("⚠️ クラウド同期エラーが発生しました");
-                }
-            });
-        }
-
-        async function saveData() {
-            saveLocalData();
-
-            const user = auth?.currentUser;
-            if (!user || user.isAnonymous) {
-                updateSyncBadge('saved');
-                return;
-            }
-
-            try {
-                updateSyncBadge('syncing');
-                const userDocRef = doc(db, 'users', user.uid);
-                await setDoc(userDocRef, {
-                    mangas: window.mangas,
-                    updatedAt: new Date().toISOString()
-                });
-                updateSyncBadge('synced');
-            } catch (e) {
-                console.error("Cloud save failed:", e);
-                updateSyncBadge('error');
-                showToast("⚠️ クラウド保存失敗: Firestoreの「ルール」設定を確認してください");
-            }
-        }
-
-        function updateAuthUI(user) {
-            const loginBtn = document.getElementById('googleLoginBtn');
-            const profileDiv = document.getElementById('googleUserProfile');
-            const avatar = document.getElementById('googleUserAvatar');
-            const nameElem = document.getElementById('googleUserName');
-
-            const displayName = window.customUserName || (user && !user.isAnonymous ? user.displayName : '') || 'ユーザー';
+            const savedUserKey = user ? `mangalog_custom_name_${user.uid}` : '';
+            const userCustomName = savedUserKey ? localStorage.getItem(savedUserKey) : '';
+            const displayName = userCustomName || (user && !user.isAnonymous ? user.displayName : '') || 'ユーザー';
 
             if (user && !user.isAnonymous) {
                 if (loginBtn) loginBtn.classList.add('hidden');
@@ -610,9 +481,9 @@
         async function handleGoogleLogout() {
             if (!auth) return;
             try {
-                if (unsubscribeSync) {
-                    unsubscribeSync();
-                    unsubscribeSync = null;
+                if (activeUnsubscribe) {
+                    activeUnsubscribe();
+                    activeUnsubscribe = null;
                 }
                 await signOut(auth);
                 loadLocalData();
@@ -625,44 +496,28 @@
 
         function setupRealtimeSync(user) {
             if (!db || !user || user.isAnonymous) return;
-            if (unsubscribeSync) unsubscribeSync();
+            if (activeUnsubscribe) activeUnsubscribe();
 
             updateSyncBadge('syncing');
 
-            // ユーザーごとの直接ドキュメントパス
-            const userDocRef = doc(db, 'users', user.uid);
+            const userRef = ref(db, 'users/' + user.uid);
 
-            unsubscribeSync = onSnapshot(userDocRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.data();
-                    if (data && Array.isArray(data.mangas)) {
-                        const localMap = new Map(window.mangas.map(m => [m.id, m]));
-                        
-                        // クラウドのデータを統合（更新日時が新しい方を優先）
-                        data.mangas.forEach(cm => {
-                            const lm = localMap.get(cm.id);
-                            if (!lm || new Date(cm.updatedAt) > new Date(lm.updatedAt)) {
-                                localMap.set(cm.id, cm);
-                            }
-                        });
-
-                        window.mangas = Array.from(localMap.values());
-                        saveLocalData();
-                        renderApp();
-                        updateSyncBadge('synced');
-                    }
+            activeUnsubscribe = onValue(userRef, (snapshot) => {
+                const val = snapshot.val();
+                if (val && Array.isArray(val.mangas)) {
+                    window.mangas = val.mangas;
+                } else if (val && val.mangas) {
+                    window.mangas = Object.values(val.mangas);
                 } else {
-                    // クラウドにデータがまだ無い場合は現在のデータを送信
-                    if (window.mangas.length > 0) {
-                        saveData();
-                    } else {
-                        updateSyncBadge('synced');
-                    }
+                    window.mangas = [];
                 }
+                saveLocalData();
+                renderApp();
+                updateSyncBadge('synced');
             }, (error) => {
-                console.error("Firestore sync error:", error);
+                console.error("Realtime DB sync error:", error);
                 updateSyncBadge('error');
-                showToast("⚠️ 同期エラー: FirebaseのFirestoreルール設定を確認してください");
+                showToast("⚠️ クラウド同期エラーが発生しました");
             });
         }
 
@@ -677,8 +532,8 @@
 
             try {
                 updateSyncBadge('syncing');
-                const userDocRef = doc(db, 'users', user.uid);
-                await setDoc(userDocRef, {
+                const userRef = ref(db, 'users/' + user.uid);
+                await set(userRef, {
                     mangas: window.mangas,
                     updatedAt: new Date().toISOString()
                 });
@@ -686,7 +541,7 @@
             } catch (e) {
                 console.error("Cloud save failed:", e);
                 updateSyncBadge('error');
-                showToast("⚠️ クラウド保存に失敗しました: Firebaseアクセス権限エラー");
+                showToast("⚠️ クラウド保存に失敗しました");
             }
         }
 
@@ -1049,7 +904,7 @@
         }
 
         function openUsernameModal() {
-            const current = window.customUserName || (auth?.currentUser?.displayName) || '';
+            const current = (auth?.currentUser) ? (localStorage.getItem(`mangalog_custom_name_${auth.currentUser.uid}`) || auth.currentUser.displayName || '') : '';
             document.getElementById('customUsernameInput').value = current;
             const modal = document.getElementById('usernameModal');
             const content = document.getElementById('usernameModalContent');
@@ -1072,9 +927,11 @@
 
         function saveCustomUsername() {
             const newName = document.getElementById('customUsernameInput').value.trim();
-            window.customUserName = newName;
-            localStorage.setItem('mangalog_custom_user_name', newName);
-            updateAuthUI(auth?.currentUser);
+            const user = auth?.currentUser;
+            if (user) {
+                localStorage.setItem(`mangalog_custom_name_${user.uid}`, newName);
+            }
+            updateAuthUI(user);
             closeUsernameModal();
             showToast("ユーザー名を変更しました！");
         }
