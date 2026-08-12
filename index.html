@@ -1,3 +1,10 @@
+漫画カード下部のタイトル表示を削除し、そこに「話数（第〇話）」と「☆評価」をまとめて配置するように `index.html` を更新いたします。
+
+index.html
+
+index.html
+
+```html
 <!DOCTYPE html>
 <html lang="ja" class="h-full bg-slate-950 text-slate-100">
 <head>
@@ -53,21 +60,15 @@
 
             <!-- Action buttons -->
             <div class="flex items-center gap-2 sm:gap-3">
-                <!-- Google Login / User Profile -->
+                <!-- Google Login / Logout -->
                 <div id="googleAuthContainer" class="flex items-center">
                     <button onclick="handleGoogleLogin()" id="googleLoginBtn" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold transition flex items-center gap-1.5 border border-slate-700/60 shadow-sm">
                         <span>ログイン</span>
                     </button>
-                    <div id="googleUserProfile" class="hidden flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 rounded-xl px-2.5 py-1.5">
-                        <img id="googleUserAvatar" src="" alt="Avatar" class="w-5 h-5 rounded-full object-cover">
-                        <span id="googleUserName" onclick="openUsernameModal()" title="ユーザー名を変更" class="text-xs font-semibold text-slate-200 max-w-[100px] sm:max-w-[140px] truncate cursor-pointer hover:text-indigo-300 transition"></span>
-                        <button onclick="openUsernameModal()" title="ユーザー名を変更" class="text-slate-400 hover:text-indigo-400 text-xs transition">
-                            <i class="fa-solid fa-pen text-[10px]"></i>
-                        </button>
-                        <button onclick="handleGoogleLogout()" title="ログアウト" class="text-slate-400 hover:text-rose-400 text-xs ml-1 transition flex items-center gap-1 font-medium">
-                            <i class="fa-solid fa-right-from-bracket"></i>
-                        </button>
-                    </div>
+                    <button onclick="handleGoogleLogout()" id="googleLogoutBtn" class="hidden px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 hover:text-rose-400 text-xs text-slate-300 font-semibold transition border border-slate-700/60 shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-from-bracket text-[11px]"></i>
+                        <span>ログアウト</span>
+                    </button>
                 </div>
 
                 <!-- AI Recommendation Modal Trigger Button -->
@@ -247,30 +248,6 @@
         </div>
     </div>
 
-    <!-- Modal: Change Username -->
-    <div id="usernameModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transform scale-95 transition-transform duration-200" id="usernameModalContent">
-            <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-user-pen text-brand-400"></i> ユーザー名の変更
-                </h3>
-                <button onclick="closeUsernameModal()" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
-                    <i class="fa-solid fa-xmark text-base"></i>
-                </button>
-            </div>
-            <div class="p-5 space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">表示名（ニックネーム）</label>
-                    <input type="text" id="customUsernameInput" placeholder="例: マンガ好き" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-brand-500">
-                </div>
-                <div class="flex items-center justify-end gap-2 pt-1">
-                    <button onclick="closeUsernameModal()" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition">キャンセル</button>
-                    <button onclick="saveCustomUsername()" class="px-4 py-1.5 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-md shadow-brand-600/30 transition">保存</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal: AI Manga Recommendations -->
     <div id="aiRecommendModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl transform scale-95 transition-transform duration-200" id="aiRecommendModalContent">
@@ -447,22 +424,14 @@
 
         function updateAuthUI(user) {
             const loginBtn = document.getElementById('googleLoginBtn');
-            const profileDiv = document.getElementById('googleUserProfile');
-            const avatar = document.getElementById('googleUserAvatar');
-            const nameElem = document.getElementById('googleUserName');
-
-            const savedUserKey = user ? `mangalog_custom_name_${user.uid}` : '';
-            const userCustomName = savedUserKey ? localStorage.getItem(savedUserKey) : '';
-            const displayName = userCustomName || (user && !user.isAnonymous ? user.displayName : '') || 'ユーザー';
+            const logoutBtn = document.getElementById('googleLogoutBtn');
 
             if (user && !user.isAnonymous) {
                 if (loginBtn) loginBtn.classList.add('hidden');
-                if (profileDiv) profileDiv.classList.remove('hidden');
-                if (avatar) avatar.src = user.photoURL || 'https://placehold.co/40x40/334155/fff?text=U';
-                if (nameElem) nameElem.textContent = displayName;
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
             } else {
                 if (loginBtn) loginBtn.classList.remove('hidden');
-                if (profileDiv) profileDiv.classList.add('hidden');
+                if (logoutBtn) logoutBtn.classList.add('hidden');
             }
         }
 
@@ -617,15 +586,14 @@
                             ${manga.author || '作者未設定'}
                         </p>
                     </div>
-                    <div class="z-20 pl-1 pt-2 flex items-center justify-between border-t border-white/15">
-                        <span class="text-[11px] font-bold text-white bg-black/40 px-2 py-0.5 rounded-md border border-white/10 backdrop-blur-sm">
+                </div>
+                <div class="p-2.5 bg-slate-950 flex items-center justify-between gap-2 border-t border-slate-800/80">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="text-[11px] font-bold text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20 shrink-0">
                             第 ${readChap} 話
                         </span>
-                        <div class="flex items-center gap-0.5">${starsHtml}</div>
+                        <div class="flex items-center gap-0.5 shrink-0">${starsHtml}</div>
                     </div>
-                </div>
-                <div class="p-2.5 bg-slate-950 flex items-center justify-between gap-2">
-                    <span class="text-[11px] font-medium text-slate-400 line-clamp-1 truncate">${manga.title}</span>
                     <button onclick="quickIncrementChap('${manga.id}', event)" title="+1話進める" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-brand-600 text-slate-200 hover:text-white border border-slate-700 hover:border-brand-500 transition flex items-center gap-1 text-xs font-bold shrink-0">
                         <i class="fa-solid fa-plus text-[10px]"></i>1話
                     </button>
@@ -903,39 +871,6 @@
             renderApp();
         }
 
-        function openUsernameModal() {
-            const current = (auth?.currentUser) ? (localStorage.getItem(`mangalog_custom_name_${auth.currentUser.uid}`) || auth.currentUser.displayName || '') : '';
-            document.getElementById('customUsernameInput').value = current;
-            const modal = document.getElementById('usernameModal');
-            const content = document.getElementById('usernameModalContent');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
-                content.classList.add('scale-100');
-            }, 10);
-        }
-
-        function closeUsernameModal() {
-            const modal = document.getElementById('usernameModal');
-            const content = document.getElementById('usernameModalContent');
-            modal.classList.add('opacity-0');
-            content.classList.remove('scale-100');
-            content.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 200);
-        }
-
-        function saveCustomUsername() {
-            const newName = document.getElementById('customUsernameInput').value.trim();
-            const user = auth?.currentUser;
-            if (user) {
-                localStorage.setItem(`mangalog_custom_name_${user.uid}`, newName);
-            }
-            updateAuthUI(user);
-            closeUsernameModal();
-            showToast("ユーザー名を変更しました！");
-        }
-
         function openAiRecommendModal() {
             const modal = document.getElementById('aiRecommendModal');
             const content = document.getElementById('aiRecommendModalContent');
@@ -1102,9 +1037,6 @@
         window.previewCoverImage = previewCoverImage;
         window.removeCoverImage = removeCoverImage;
         window.setFilterStatus = setFilterStatus;
-        window.openUsernameModal = openUsernameModal;
-        window.closeUsernameModal = closeUsernameModal;
-        window.saveCustomUsername = saveCustomUsername;
         window.openAiRecommendModal = openAiRecommendModal;
         window.closeAiRecommendModal = closeAiRecommendModal;
         window.setAiPref = setAiPref;
@@ -1121,3 +1053,4 @@
     </script>
 </body>
 </html>
+```eof
