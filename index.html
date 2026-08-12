@@ -262,6 +262,18 @@
                     あなたの記録した読書傾向（評価・高評価作品など）をAIが分析し、次におすすめの漫画を提案します。
                 </p>
 
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-semibold text-slate-300">Gemini API キー <span class="text-slate-500 font-normal">(完全無料)</span></label>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[10px] text-brand-400 hover:underline">キーを取得 <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-brand-500">
+                        <button onclick="saveGeminiApiKey()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition shrink-0">保存</button>
+                    </div>
+                    <p class="text-[10px] text-slate-500">※キーは安全にブラウザ内(ローカル)にのみ保存されます。AI診断を行うにはキーの設定が必須です。</p>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <button onclick="setAiPref('favorites')" id="pref-favorites" class="ai-pref-btn px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white border border-indigo-500 transition text-center">
                         ⭐ 高評価作品ベース
@@ -310,11 +322,26 @@
         let activeUnsubscribe = null;
 
         // Gemini API Configuration
-        const GEMINI_MODEL = "gemini-3-flash-preview";
+        const GEMINI_MODEL = "gemini-1.5-flash";
+        let savedGeminiApiKey = localStorage.getItem('mangalog_gemini_api_key') || '';
+
+        function saveGeminiApiKey() {
+            const val = document.getElementById('geminiApiKeyInput').value.trim();
+            if (val) {
+                savedGeminiApiKey = val;
+                localStorage.setItem('mangalog_gemini_api_key', val);
+                showToast("APIキーを保存しました");
+            } else {
+                showToast("APIキーを入力してください");
+            }
+        }
 
         async function callGeminiApi(prompt, systemInstruction = "", responseSchema = null, useSearch = false) {
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+            if (!savedGeminiApiKey) {
+                throw new Error("API_KEY_MISSING");
+            }
+            
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${savedGeminiApiKey}`;
 
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }]
@@ -972,6 +999,7 @@
         }
 
         function openAiRecommendModal() {
+            document.getElementById('geminiApiKeyInput').value = savedGeminiApiKey;
             const modal = document.getElementById('aiRecommendModal');
             const content = document.getElementById('aiRecommendModalContent');
             modal.classList.remove('hidden');
@@ -1074,11 +1102,16 @@
                         resultsContainer.appendChild(recCard);
                     });
                 } else {
+                    console.error("AI Response error:", resData);
                     resultsContainer.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">診断結果を取得できませんでした。再度お試しください。</div>`;
                 }
             } catch (err) {
                 console.error("AI Rec error:", err);
-                resultsContainer.innerHTML = `<div class="text-center py-6 text-rose-400 text-xs">AI診断中にエラーが発生しました。時間を置いてお試しください。</div>`;
+                if (err.message === "API_KEY_MISSING") {
+                    resultsContainer.innerHTML = `<div class="text-center py-6 text-amber-400 text-xs font-semibold">⚠️ Gemini APIキーが設定されていません。<br>上の設定欄にキーを入力して「保存」を押してからお試しください。</div>`;
+                } else {
+                    resultsContainer.innerHTML = `<div class="text-center py-6 text-rose-400 text-xs">AI診断中にエラーが発生しました。APIキーが間違っているか、通信エラーの可能性があります。</div>`;
+                }
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalBtnHtml;
@@ -1142,6 +1175,7 @@
         window.openAiRecommendModal = openAiRecommendModal;
         window.closeAiRecommendModal = closeAiRecommendModal;
         window.setAiPref = setAiPref;
+        window.saveGeminiApiKey = saveGeminiApiKey;
         window.generateAiRecommendations = generateAiRecommendations;
         window.addRecommendedManga = addRecommendedManga;
         window.renderApp = renderApp;
