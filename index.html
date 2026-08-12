@@ -336,7 +336,7 @@
             }
         }
 
-        async function callGeminiApi(prompt, systemInstruction = "", responseSchema = null, useSearch = false) {
+        async function callGeminiApi(prompt, systemInstruction = "", responseSchema = null) {
             if (!savedGeminiApiKey) {
                 throw new Error("API_KEY_MISSING");
             }
@@ -348,7 +348,7 @@
             };
 
             if (systemInstruction) payload.systemInstruction = { parts: [{ text: systemInstruction }] };
-            if (useSearch) payload.tools = [{ "google_search": {} }];
+            // エラーの原因になりやすい検索ツール(Tools)を一時的に除外して安定化
             if (responseSchema) payload.generationConfig = { responseMimeType: "application/json", responseSchema: responseSchema };
 
             let delay = 1000;
@@ -359,10 +359,18 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-                    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-                    return await response.json();
+                    
+                    const resJson = await response.json();
+                    
+                    // HTTPエラーの場合は、APIからの詳細なエラーメッセージを取得して投げる
+                    if (!response.ok) {
+                        const errMsg = resJson.error?.message || `HTTP Error: ${response.status}`;
+                        throw new Error(errMsg);
+                    }
+                    
+                    return resJson;
                 } catch (err) {
-                    if (attempt === 2) throw err;
+                    if (attempt === 2 || err.message !== "Failed to fetch") throw err; // ネットワークエラー以外は再試行せずにすぐエラーを投げる
                     await new Promise(res => setTimeout(res, delay));
                     delay *= 2;
                 }
@@ -1074,10 +1082,16 @@
                     }
                 };
 
-                const resData = await callGeminiApi(prompt, "あなたは漫画ソムリエです。ユーザーの嗜好に合ったおすすめ漫画を説得力のある理由とともに推薦してください。", schema, true);
+                // 第4引数 (useSearch) を削除し、安定版の呼び出しに変更
+                const resData = await callGeminiApi(prompt, "あなたは漫画ソムリエです。ユーザーの嗜好に合ったおすすめ漫画を説得力のある理由とともに推薦してください。", schema);
 
-                if (resData?.candidates?.[0]?.content?.parts?.[0]?.text) {
-                    const recommendations = JSON.parse(resData.candidates[0].content.parts[0].text);
+                let textRes = resData?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (textRes) {
+                    // AIが余計なMarkdown記法 (```json など) を付けてきた場合に備えて除去する
+                    textRes = textRes.replace(/```json/gi, '').replace(/```/g, '').trim();
+                    const recommendations = JSON.parse(textRes);
+                    
                     resultsContainer.innerHTML = '';
                     recommendations.forEach((rec) => {
                         const recCard = document.createElement('div');
@@ -1110,7 +1124,8 @@
                 if (err.message === "API_KEY_MISSING") {
                     resultsContainer.innerHTML = `<div class="text-center py-6 text-amber-400 text-xs font-semibold">⚠️ Gemini APIキーが設定されていません。<br>上の設定欄にキーを入力して「保存」を押してからお試しください。</div>`;
                 } else {
-                    resultsContainer.innerHTML = `<div class="text-center py-6 text-rose-400 text-xs">AI診断中にエラーが発生しました。APIキーが間違っているか、通信エラーの可能性があります。</div>`;
+                    // エラーの内容を画面に直接表示するようにしました
+                    resultsContainer.innerHTML = `<div class="text-center py-6 text-rose-400 text-xs">AI診断中にエラーが発生しました。<br><br>【エラー原因】<br><span class="text-[10px] text-rose-300 font-mono">${err.message}</span><br><br>※ APIキーが間違っているか、キーが無効になっている可能性があります。</div>`;
                 }
             } finally {
                 btn.disabled = false;
