@@ -45,32 +45,33 @@
     <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <!-- App Title & Cloud Sync Status Badge -->
-            <div class="flex items-center gap-3 select-none">
+            <div class="flex items-center gap-2 sm:gap-3 select-none shrink-0">
                 <span class="font-black text-xl sm:text-2xl tracking-tight text-white">漫画読録</span>
                 <span id="syncStatusBadge" class="hidden text-[11px] font-semibold px-2.5 py-1 rounded-full transition duration-300">
                 </span>
             </div>
 
             <!-- Action buttons -->
-            <div class="flex items-center gap-2 sm:gap-3">
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                 <!-- Google Login / Logout -->
-                <div id="googleAuthContainer" class="flex items-center">
-                    <button onclick="handleGoogleLogin()" id="googleLoginBtn" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold transition flex items-center gap-1.5 border border-slate-700/60 shadow-sm">
-                        <span>ログイン</span>
+                <div id="googleAuthContainer" class="flex items-center shrink-0">
+                    <button onclick="handleGoogleLogin()" id="googleLoginBtn" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold transition flex items-center gap-1.5 border border-slate-700/60 shadow-sm whitespace-nowrap" title="ログイン">
+                        <i class="fa-solid fa-arrow-right-to-bracket text-[11px] sm:hidden"></i>
+                        <span class="hidden sm:inline">ログイン</span>
                     </button>
-                    <button onclick="handleGoogleLogout()" id="googleLogoutBtn" class="hidden px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 hover:text-rose-400 text-xs text-slate-300 font-semibold transition border border-slate-700/60 shadow-sm flex items-center gap-1.5">
+                    <button onclick="handleGoogleLogout()" id="googleLogoutBtn" class="hidden px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 hover:text-rose-400 text-xs text-slate-300 font-semibold transition border border-slate-700/60 shadow-sm flex items-center gap-1.5 whitespace-nowrap" title="ログアウト">
                         <i class="fa-solid fa-right-from-bracket text-[11px]"></i>
-                        <span>ログアウト</span>
+                        <span class="hidden sm:inline">ログアウト</span>
                     </button>
                 </div>
 
                 <!-- AI Recommendation Modal Trigger Button -->
-                <button onclick="openAiRecommendModal()" class="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-brand-600 hover:from-purple-500 hover:to-brand-500 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98]">
+                <button onclick="openAiRecommendModal()" class="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-brand-600 hover:from-purple-500 hover:to-brand-500 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98] shrink-0" title="AI診断">
                     <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
-                    <span class="hidden xs:inline">AI診断</span>
+                    <span class="hidden sm:inline">AI診断</span>
                 </button>
 
-                <button onclick="openAddModal()" class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-lg shadow-brand-600/30 hover:scale-[1.02] active:scale-[0.98]">
+                <button onclick="openAddModal()" class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-lg shadow-brand-600/30 hover:scale-[1.02] active:scale-[0.98] shrink-0" title="作品追加">
                     <i class="fa-solid fa-plus"></i>
                     <span class="hidden sm:inline">作品追加</span>
                 </button>
@@ -98,7 +99,7 @@
                     ✅ 読了
                 </button>
                 <button onclick="setFilterStatus('plan')" id="tab-plan" class="status-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800">
-                    🔖 積読・読みたい
+                    🔖 読みたい
                 </button>
                 <button onclick="setFilterStatus('dropped')" id="tab-dropped" class="status-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800">
                     ⏸ 中断
@@ -106,22 +107,25 @@
             </div>
 
             <!-- Search & Sort options -->
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+            <div class="flex flex-col sm:flex-row gap-3 items-center w-full">
                 <!-- Search input -->
-                <div class="sm:col-span-8 relative">
+                <div class="relative w-full sm:flex-1">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
                     <input type="text" id="searchInput" oninput="renderApp()" placeholder="タイトル・作者名で検索..." 
                            class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition">
                 </div>
 
-                <!-- Sort Filter -->
-                <div class="sm:col-span-4">
-                    <select id="sortSelect" onchange="renderApp()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-brand-500 transition">
+                <!-- Sort Filter & View Mode Toggle -->
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <select id="sortSelect" onchange="renderApp()" class="flex-1 sm:w-48 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-brand-500 transition">
                         <option value="updated-desc">更新日時が新しい順</option>
                         <option value="rating-desc">評価が高い順</option>
                         <option value="chapter-desc">読了話数が多い順</option>
                         <option value="title-asc">タイトル名順 (五十音)</option>
                     </select>
+                    <button onclick="toggleViewMode()" class="px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 transition flex items-center justify-center shrink-0" title="表示切り替え">
+                        <i id="viewModeIcon" class="fa-solid fa-list text-sm"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -185,7 +189,7 @@
                         <select id="formStatus" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-brand-500">
                             <option value="reading">📖 読書中</option>
                             <option value="completed">✅ 読了</option>
-                            <option value="plan">🔖 積読・読みたい</option>
+                            <option value="plan">🔖 読みたい</option>
                             <option value="dropped">⏸ 中断</option>
                         </select>
                     </div>
@@ -341,6 +345,13 @@
         window.mangas = [];
         window.currentFilterStatus = 'all';
         window.selectedAiPref = 'favorites';
+        window.currentViewMode = localStorage.getItem('mangalog_view_mode') || 'grid';
+
+        function toggleViewMode() {
+            window.currentViewMode = window.currentViewMode === 'grid' ? 'list' : 'grid';
+            localStorage.setItem('mangalog_view_mode', window.currentViewMode);
+            renderApp();
+        }
 
         function loadLocalData() {
             try {
@@ -368,21 +379,21 @@
 
             if (status === 'syncing') {
                 badge.classList.remove('hidden');
-                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 transition duration-300";
-                badge.textContent = "🔄 同期中...";
+                badge.className = "text-[11px] font-semibold px-2 py-1 sm:px-2.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 transition duration-300 whitespace-nowrap flex items-center gap-1 shrink-0";
+                badge.innerHTML = `<i class="fa-solid fa-rotate animate-spin"></i><span class="hidden sm:inline">同期中...</span>`;
             } else if (status === 'synced') {
                 badge.classList.remove('hidden');
-                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition duration-300";
-                badge.textContent = "☁️ クラウド同期済み";
+                badge.className = "text-[11px] font-semibold px-2 py-1 sm:px-2.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition duration-300 whitespace-nowrap flex items-center gap-1 shrink-0";
+                badge.innerHTML = `☁️<span class="hidden sm:inline">クラウド同期済み</span>`;
                 badgeTimeout = setTimeout(() => { badge.classList.add('hidden'); }, 3000);
             } else if (status === 'error') {
                 badge.classList.remove('hidden');
-                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 transition duration-300";
-                badge.textContent = "⚠️ 同期エラー";
+                badge.className = "text-[11px] font-semibold px-2 py-1 sm:px-2.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 transition duration-300 whitespace-nowrap flex items-center gap-1 shrink-0";
+                badge.innerHTML = `⚠️<span class="hidden sm:inline">同期エラー</span>`;
             } else if (status === 'saved') {
                 badge.classList.remove('hidden');
-                badge.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 transition duration-300";
-                badge.textContent = "💾 ローカル保存";
+                badge.className = "text-[11px] font-semibold px-2 py-1 sm:px-2.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 transition duration-300 whitespace-nowrap flex items-center gap-1 shrink-0";
+                badge.innerHTML = `💾<span class="hidden sm:inline">ローカル保存</span>`;
                 badgeTimeout = setTimeout(() => { badge.classList.add('hidden'); }, 2500);
             } else {
                 badge.classList.add('hidden');
@@ -529,11 +540,23 @@
 
             if (!mangaGrid) return;
             mangaGrid.innerHTML = '';
+            
+            const viewModeIcon = document.getElementById('viewModeIcon');
+            if (viewModeIcon) {
+                viewModeIcon.className = window.currentViewMode === 'grid' ? "fa-solid fa-list text-sm" : "fa-solid fa-border-all text-sm";
+            }
+
             if (filtered.length === 0) {
                 emptyState?.classList.remove('hidden');
             } else {
                 emptyState?.classList.add('hidden');
-                filtered.forEach(manga => mangaGrid.appendChild(createMangaCard(manga)));
+                if (window.currentViewMode === 'grid') {
+                    mangaGrid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5";
+                    filtered.forEach(manga => mangaGrid.appendChild(createMangaCard(manga)));
+                } else {
+                    mangaGrid.className = "flex flex-col gap-2 sm:gap-3";
+                    filtered.forEach(manga => mangaGrid.appendChild(createMangaListItem(manga)));
+                }
             }
         }
 
@@ -546,15 +569,15 @@
             const statusBadges = {
                 reading: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 backdrop-blur-md">📖 読書中</span>',
                 completed: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 backdrop-blur-md">✅ 読了</span>',
-                plan: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 backdrop-blur-md">🔖 積読</span>',
+                plan: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 backdrop-blur-md">🔖 読みたい</span>',
                 dropped: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/20 text-slate-300 border border-slate-400/30 backdrop-blur-md">⏸ 中断</span>'
             };
 
             let starsHtml = '';
             for (let i = 1; i <= 5; i++) {
                 starsHtml += i <= manga.rating 
-                    ? '<i class="fa-solid fa-star text-amber-400 text-[11px]"></i>'
-                    : '<i class="fa-solid fa-star text-slate-700/80 text-[11px]"></i>';
+                    ? '<i class="fa-solid fa-star text-amber-400 text-[9px] sm:text-[10px]"></i>'
+                    : '<i class="fa-solid fa-star text-slate-700/80 text-[9px] sm:text-[10px]"></i>';
             }
 
             const hasCoverImage = manga.coverUrl && manga.coverUrl.trim().length > 0;
@@ -580,19 +603,88 @@
                         </p>
                     </div>
                 </div>
-                <div class="p-2.5 bg-slate-950 flex items-center justify-between gap-2 border-t border-slate-800/80">
-                    <div class="flex items-center gap-1.5 min-w-0">
-                        <span class="text-[11px] font-bold text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20 shrink-0">
+                <div class="p-2 sm:p-2.5 bg-slate-950 flex items-center justify-between gap-1 border-t border-slate-800/80">
+                    <div class="flex flex-col gap-1.5 min-w-0">
+                        <span class="text-[10px] font-bold text-indigo-300 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20 w-max">
                             第 ${readChap} 話
                         </span>
-                        <div class="flex items-center gap-0.5 shrink-0">${starsHtml}</div>
+                        <div class="flex items-center gap-0.5">${starsHtml}</div>
                     </div>
-                    <button onclick="quickIncrementChap('${manga.id}', event)" title="+1話進める" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-brand-600 text-slate-200 hover:text-white border border-slate-700 hover:border-brand-500 transition flex items-center gap-1 text-xs font-bold shrink-0">
-                        <i class="fa-solid fa-plus text-[10px]"></i>1話
-                    </button>
+                    <div class="flex items-center gap-1 shrink-0 h-full">
+                        <button onclick="quickDecrementChap('${manga.id}', event)" title="-1話戻す" class="px-2.5 py-2 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center justify-center text-[10px] sm:text-xs font-bold">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <button onclick="quickIncrementChap('${manga.id}', event)" title="+1話進める" class="px-2.5 py-2 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-brand-600 text-slate-200 hover:text-white border border-slate-700 hover:border-brand-500 transition flex items-center justify-center gap-1 text-[10px] sm:text-xs font-bold">
+                            <i class="fa-solid fa-plus text-[9px]"></i><span class="whitespace-nowrap">1話</span>
+                        </button>
+                    </div>
                 </div>
             `;
             return card;
+        }
+
+        function createMangaListItem(manga) {
+            const item = document.createElement('div');
+            item.className = "group flex items-stretch gap-3 sm:gap-4 p-2.5 sm:p-3 bg-slate-900 border border-slate-800 hover:border-brand-500/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer";
+            item.onclick = (e) => {
+                if (!e.target.closest('button')) {
+                    openDetailModal(manga.id);
+                }
+            };
+
+            const readChap = manga.readChap || 0;
+            const statusBadges = {
+                reading: '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap">📖 読書中</span>',
+                completed: '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">✅ 読了</span>',
+                plan: '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 whitespace-nowrap">🔖 読みたい</span>',
+                dropped: '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/20 whitespace-nowrap">⏸ 中断</span>'
+            };
+
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                starsHtml += i <= manga.rating 
+                    ? '<i class="fa-solid fa-star text-amber-400 text-[10px]"></i>'
+                    : '<i class="fa-solid fa-star text-slate-700/80 text-[10px]"></i>';
+            }
+
+            const hasCoverImage = manga.coverUrl && manga.coverUrl.trim().length > 0;
+
+            item.innerHTML = `
+                <div class="w-14 sm:w-16 h-20 sm:h-24 shrink-0 rounded-lg overflow-hidden relative bg-slate-950 border border-slate-800">
+                    ${hasCoverImage ? `
+                        <img src="${manga.coverUrl}" alt="${manga.title}" referrerpolicy="no-referrer" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                    ` : `
+                        <div class="w-full h-full bg-gradient-to-br ${manga.coverColor || 'from-indigo-600 via-indigo-700 to-purple-900'} opacity-80"></div>
+                    `}
+                    <div class="absolute top-0 bottom-0 left-0 w-1 bg-black/20 border-r border-white/10"></div>
+                </div>
+                <div class="flex-1 min-w-0 flex flex-col justify-center py-0.5">
+                    <div class="flex items-center gap-2 mb-0.5 sm:mb-1">
+                        <h3 class="font-bold text-sm sm:text-base text-white truncate max-w-[140px] sm:max-w-none">${manga.title}</h3>
+                        <div class="hidden sm:block">${statusBadges[manga.status] || ''}</div>
+                    </div>
+                    <p class="text-[11px] sm:text-xs text-slate-400 truncate mb-1.5 sm:mb-2">${manga.author || '作者未設定'}</p>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-0.5">${starsHtml}</div>
+                        <div class="sm:hidden">${statusBadges[manga.status] || ''}</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0 pl-2 border-l border-slate-800/80">
+                    <div class="flex flex-col items-center justify-center bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 min-w-[3.5rem] sm:min-w-[4rem]">
+                        <span class="text-[9px] sm:text-[10px] text-indigo-400 font-medium leading-tight">第</span>
+                        <span class="text-xs sm:text-sm font-black text-indigo-300 leading-none">${readChap}</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-1 sm:gap-1.5">
+                        <button onclick="quickIncrementChap('${manga.id}', event)" title="+1話進める" class="w-7 h-7 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white transition flex items-center justify-center gap-1 shadow-sm">
+                            <i class="fa-solid fa-plus text-[10px]"></i><span class="hidden sm:inline text-xs font-bold">1話</span>
+                        </button>
+                        <button onclick="quickDecrementChap('${manga.id}', event)" title="-1話戻す" class="w-7 h-7 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center justify-center">
+                            <i class="fa-solid fa-minus text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            return item;
         }
 
         function quickIncrementChap(id, event) {
@@ -603,7 +695,17 @@
                 window.mangas[index].updatedAt = new Date().toISOString();
                 saveData();
                 renderApp();
-                showToast(`「${window.mangas[index].title}」 を第${window.mangas[index].readChap}話に進めました`);
+            }
+        }
+
+        function quickDecrementChap(id, event) {
+            if (event) event.stopPropagation();
+            const index = window.mangas.findIndex(m => m.id === id);
+            if (index !== -1 && (window.mangas[index].readChap || 0) > 0) {
+                window.mangas[index].readChap -= 1;
+                window.mangas[index].updatedAt = new Date().toISOString();
+                saveData();
+                renderApp();
             }
         }
 
@@ -809,13 +911,18 @@
                         <button onclick="deleteManga('${manga.id}')" class="px-3 py-2 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition flex items-center gap-1.5">
                             <i class="fa-solid fa-trash-can"></i> 削除
                         </button>
-                        <div class="flex items-center gap-2">
-                            <button onclick="openEditModal('${manga.id}')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5">
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="openEditModal('${manga.id}')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 hidden sm:flex">
                                 <i class="fa-solid fa-pen"></i> 編集
                             </button>
-                            <button onclick="quickIncrementChap('${manga.id}'); openDetailModal('${manga.id}');" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-500 text-white transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-plus"></i> 1話進める
-                            </button>
+                            <div class="flex items-center gap-1">
+                                <button onclick="quickDecrementChap('${manga.id}'); openDetailModal('${manga.id}');" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center">
+                                    <i class="fa-solid fa-minus"></i>
+                                </button>
+                                <button onclick="quickIncrementChap('${manga.id}'); openDetailModal('${manga.id}');" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-500 text-white transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-plus"></i> 1話進める
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -956,7 +1063,7 @@
                                     <p class="text-xs text-slate-400 font-medium">${rec.author || '作者情報なし'}</p>
                                 </div>
                                 <button onclick="addRecommendedManga('${safeTitle}', '${safeAuthor}')" class="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition shrink-0 flex items-center gap-1 shadow-md shadow-brand-600/20">
-                                    <i class="fa-solid fa-plus text-[10px]"></i> 積読に追加
+                                    <i class="fa-solid fa-plus text-[10px]"></i> 読みたいに追加
                                 </button>
                             </div>
                             <div class="text-[11px] text-amber-300/90 font-medium bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20 inline-block">
@@ -995,7 +1102,7 @@
             window.mangas.unshift(newManga);
             saveData();
             renderApp();
-            showToast(`「${title}」を「積読・読みたい」に追加しました！`);
+            showToast(`「${title}」を「読みたい」に追加しました！`);
         }
 
         function showToast(msg) {
@@ -1025,7 +1132,9 @@
         window.openDetailModal = openDetailModal;
         window.closeDetailModal = closeDetailModal;
         window.deleteManga = deleteManga;
+        window.toggleViewMode = toggleViewMode;
         window.quickIncrementChap = quickIncrementChap;
+        window.quickDecrementChap = quickDecrementChap;
         window.handleCoverFileUpload = handleCoverFileUpload;
         window.previewCoverImage = previewCoverImage;
         window.removeCoverImage = removeCoverImage;
@@ -1046,4 +1155,3 @@
     </script>
 </body>
 </html>
-```eof
