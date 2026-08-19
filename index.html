@@ -839,20 +839,20 @@
                         </div>
                     </div>
 
-                    <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
-                        <button onclick="deleteManga('${manga.id}')" class="px-3 py-2 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-trash-can"></i> 削除
+                    <div class="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                        <button onclick="deleteManga('${manga.id}')" class="px-3 py-2 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition flex items-center gap-1.5 shrink-0">
+                            <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">削除</span>
                         </button>
-                        <div class="flex items-center gap-1.5">
-                            <button onclick="openEditModal('${manga.id}')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 hidden sm:flex">
+                        <div class="flex items-center gap-1.5 ml-auto">
+                            <button onclick="openEditModal('${manga.id}')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 shrink-0">
                                 <i class="fa-solid fa-pen"></i> 編集
                             </button>
-                            <div class="flex items-center gap-1">
+                            <div class="flex items-center gap-1 shrink-0">
                                 <button onclick="quickDecrementChap('${manga.id}'); openDetailModal('${manga.id}');" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center">
                                     <i class="fa-solid fa-minus"></i>
                                 </button>
-                                <button onclick="quickIncrementChap('${manga.id}'); openDetailModal('${manga.id}');" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-500 text-white transition flex items-center gap-1.5">
-                                    <i class="fa-solid fa-plus"></i> 1話進める
+                                <button onclick="quickIncrementChap('${manga.id}'); openDetailModal('${manga.id}');" class="px-3 py-2 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-500 text-white transition flex items-center gap-1">
+                                    <i class="fa-solid fa-plus"></i> <span class="whitespace-nowrap">1話</span>
                                 </button>
                             </div>
                         </div>
